@@ -811,7 +811,8 @@ class Minimizer(object):
 
     def emcee(self, params=None, steps=1000, nwalkers=100, burn=0, thin=1,
               ntemps=1, pos=None, reuse_sampler=False, workers=1,
-              float_behavior='posterior', is_weighted=True, seed=None):
+              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, iter_cb_kwargs={}, emcee_sampler_kwargs={}):
+        
         r"""
         Bayesian sampling of the posterior distribution using `emcee`.
 
@@ -903,6 +904,17 @@ class Minimizer(object):
             If `seed` is already a `numpy.random.RandomState` instance, then
             that `numpy.random.RandomState` instance is used.
             Specify `seed` for repeatable minimizations.
+        iter_cb : callable, optional
+            A function to be run in-between each "iteration" of emcee. Can pass special 
+            kwargs using the iter_cb_kwargs argument
+        gaussian_scale : float, optional
+            Initial positions for each walker are jittered around their starting value
+            by multiplying by a random number around one. This number is found from a normal
+            distribution with width gaussian_scale
+        emcee_sampler_kwargs : dict, optional
+            Dictionary to be passed as **kwargs to emcee.sampler.sample
+        iter_cb_kwargs : dict, optional
+            kwargs to pass to the iter_cb function
 
         Returns
         -------
@@ -1095,12 +1107,13 @@ class Minimizer(object):
         elif ntemps > 1:
             # Parallel Tempering
             # jitter the starting position by scaled Gaussian noise
-            p0 = 1 + rng.randn(ntemps, nwalkers, self.nvarys) * 1.e-4
+            p0 = 1 + rng.randn(ntemps, nwalkers, self.nvarys) * gaussian_scale
             p0 *= var_arr
             self.sampler = emcee.PTSampler(ntemps, nwalkers, self.nvarys,
                                            _lnpost, _lnprior, **sampler_kwargs)
         else:
-            p0 = 1 + rng.randn(nwalkers, self.nvarys) * 1.e-4
+            print "{}".format(gaussian_scale)
+            p0 = 1 + rng.randn(nwalkers, self.nvarys) * gaussian_scale
             p0 *= var_arr
             self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
                                                  _lnpost, **sampler_kwargs)
@@ -1132,8 +1145,17 @@ class Minimizer(object):
             self.sampler.random_state = rng.get_state()
 
         # now do a production run, sampling all the time
-        output = self.sampler.run_mcmc(p0, steps)
-        self._lastpos = output[0]
+        # With a call to our call_back function if it exists
+        for iteration, emcee_result in enumerate(self.sampler.sample(p0, iterations=steps, **emcee_sampler_kwargs)):
+
+            if callable(self.iter_cb):
+                abort = self.iter_cb(params, iteration, emcee_result, steps, 
+                                 *self.userargs, **iter_cb_kwargs) #**self.userkws, **iter_cb_kwargs)
+                self._abort = self._abort or abort
+            self._abort = self._abort and self.iteration > len(fvars)
+        #output = self.sampler.run_mcmc(p0, steps)
+
+        self._lastpos = emcee_result[0]
 
         # discard the burn samples and thin
         chain = self.sampler.chain[..., burn::thin, :]
