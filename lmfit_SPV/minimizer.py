@@ -1147,14 +1147,14 @@ class Minimizer(object):
         # now do a production run, sampling all the time
         # With a call to our call_back function if it exists
         for iteration, emcee_result in enumerate(self.sampler.sample(p0, iterations=steps, **emcee_sampler_kwargs)):
-
+            
             if callable(self.iter_cb):
                 abort = self.iter_cb(params, iteration, emcee_result, steps, 
                                  *self.userargs, **iter_cb_kwargs) #**self.userkws, **iter_cb_kwargs)
                 self._abort = self._abort or abort
             self._abort = self._abort and self.iteration > len(fvars)
         #output = self.sampler.run_mcmc(p0, steps)
-
+        
         self._lastpos = emcee_result[0]
 
         # discard the burn samples and thin

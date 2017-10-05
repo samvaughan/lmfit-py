@@ -560,6 +560,8 @@ class Parameter(object):
         self._expr_deps = []
         self._delay_asteval = False
         self.stderr = None
+        self.p_err = None
+        self.m_err = None
         self.correl = None
         self.from_internal = lambda val: val
         self._init_bounds()
@@ -684,6 +686,8 @@ class Parameter(object):
             sval = "value=%s (fixed)" % sval
         elif self.stderr is not None:
             sval = "value=%s +/- %.3g" % (sval, self.stderr)
+        elif self.p_err is not None and self.m_err is not None:
+            sval = "value={} + {:.3f} - {:.3f}" % (sval, self.p_err, self.m_err)
         s.append(sval)
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
         if self._expr is not None:
