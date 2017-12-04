@@ -1112,7 +1112,7 @@ class Minimizer(object):
             self.sampler = emcee.PTSampler(ntemps, nwalkers, self.nvarys,
                                            _lnpost, _lnprior, **sampler_kwargs)
         else:
-            print "{}".format(gaussian_scale)
+            print "{}".format(sampler_kwargs)
             p0 = 1 + rng.randn(nwalkers, self.nvarys) * gaussian_scale
             p0 *= var_arr
             self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
