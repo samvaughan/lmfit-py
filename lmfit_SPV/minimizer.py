@@ -59,7 +59,7 @@ except ImportError:
 # check for EMCEE
 HAS_EMCEE = False
 try:
-    import emcee as emcee
+    import emcee3 as emcee
     HAS_EMCEE = True
 except ImportError:
     pass
@@ -811,7 +811,7 @@ class Minimizer(object):
 
     def emcee(self, params=None, steps=1000, nwalkers=100, burn=0, thin=1,
               ntemps=1, pos=None, reuse_sampler=False, workers=1,
-              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, iter_cb_kwargs={}, emcee_sampler_kwargs={}):
+              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, iter_cb_kwargs={}, emcee_sampler_kwargs={}, **sampler_kwargs):
         
         r"""
         Bayesian sampling of the posterior distribution using `emcee`.
@@ -1067,12 +1067,12 @@ class Minimizer(object):
 
         # set up multiprocessing options for the samplers
         auto_pool = None
-        sampler_kwargs = {}
-        if isinstance(workers, int) and workers > 1:
-            auto_pool = multiprocessing.Pool(workers)
-            sampler_kwargs['pool'] = auto_pool
-        elif hasattr(workers, 'map'):
-            sampler_kwargs['pool'] = workers
+        # sampler_kwargs = {}
+        # if isinstance(workers, int) and workers > 1:
+        #     auto_pool = multiprocessing.Pool(workers)
+        #     sampler_kwargs['pool'] = auto_pool
+        # elif hasattr(workers, 'map'):
+        #     sampler_kwargs['pool'] = workers
 
         # function arguments for the log-probability functions
         # these values are sent to the log-probability functions by the sampler.
@@ -1146,7 +1146,7 @@ class Minimizer(object):
 
         # now do a production run, sampling all the time
         # With a call to our call_back function if it exists
-        for iteration, emcee_result in enumerate(self.sampler.sample(p0, iterations=steps, **emcee_sampler_kwargs)):
+        for iteration, emcee_result in enumerate(self.sampler.sample(p0, iterations=steps, **emcee_sample_kwargs)):
             
             if callable(self.iter_cb):
                 abort = self.iter_cb(params, iteration, emcee_result, steps, 
