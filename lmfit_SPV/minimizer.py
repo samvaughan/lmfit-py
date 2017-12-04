@@ -811,7 +811,7 @@ class Minimizer(object):
 
     def emcee(self, params=None, steps=1000, nwalkers=100, burn=0, thin=1,
               ntemps=1, pos=None, reuse_sampler=False, workers=1,
-              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, iter_cb_kwargs={}, emcee_sample_kwargs={}, **sampler_kwargs):
+              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, iter_cb_kwargs={}, emcee_sample_kwargs={}, sampler_kwargs={}):
         
         r"""
         Bayesian sampling of the posterior distribution using `emcee`.
