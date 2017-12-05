@@ -811,7 +811,7 @@ class Minimizer(object):
 
     def emcee(self, params=None, steps=1000, nwalkers=100, burn=0, thin=1,
               ntemps=1, pos=None, reuse_sampler=False, workers=1,
-              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, iter_cb_kwargs={}, emcee_sample_kwargs={}, sampler_kwargs={}):
+              float_behavior='posterior', is_weighted=True, seed=None, gaussian_scale=1.e-2, backend=None, pool=None, iter_cb_kwargs={}, emcee_sample_kwargs={}):
         
         r"""
         Bayesian sampling of the posterior distribution using `emcee`.
@@ -1006,7 +1006,6 @@ class Minimizer(object):
         if not HAS_EMCEE:
             raise NotImplementedError('You must have emcee to use'
                                       ' the emcee method')
-
         tparams = params
         # if you're reusing the sampler then ntemps, nwalkers have to be
         # determined from the previous sampling
@@ -1066,7 +1065,9 @@ class Minimizer(object):
 
         self.nvarys = len(result.var_names)
 
-        # set up multiprocessing options for the samplers
+
+        #Major hacks here-SPV
+        # # set up multiprocessing options for the samplers
         auto_pool = None
         sampler_kwargs = {}
         if isinstance(workers, int) and workers > 1:
@@ -1115,9 +1116,14 @@ class Minimizer(object):
         else:
             #p0 = 1 + rng.randn(nwalkers, self.nvarys) * gaussian_scale
             #p0 *= var_arr
-            print "Calling emcee as emcee.EnsembleSampler({}, {}. _lnpost, {})".format(nwalkers, self.nvarys, sampler_kwargs)
-            self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
-                                                 _lnpost, **sampler_kwargs)
+            #print "Calling emcee as emcee.EnsembleSampler({}, {}. _lnpost, {})".format(nwalkers, self.nvarys, sampler_kwargs)
+            #Major hacks here-SPV
+            if pool is None:
+                self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
+                                                 _lnpost, backend=backend, **sampler_kwargs)
+            else:
+                self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
+                                                 _lnpost, backend=backend, pool=pool, **sampler_kwargs)
 
         # user supplies an initialisation position for the chain
         # If you try to run the sampler with p0 of a wrong size then you'll get
@@ -1125,7 +1131,7 @@ class Minimizer(object):
         # reusing the sampler.
         if pos is not None and not reuse_sampler:
             tpos = np.asfarray(pos)
-            if p0.shape == tpos.shape:
+            if pos.shape == tpos.shape:
                 pass
             # trying to initialise with a previous chain
             elif tpos.shape[0::2] == (nwalkers, self.nvarys):
