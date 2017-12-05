@@ -1115,7 +1115,7 @@ class Minimizer(object):
         else:
             #p0 = 1 + rng.randn(nwalkers, self.nvarys) * gaussian_scale
             #p0 *= var_arr
-            print "Calling emcee as emcee.EnsembleSampler({}, {}. _lnpost, {})".format(nwalkers, self.nvarys, **sampler_kwargs)
+            print "Calling emcee as emcee.EnsembleSampler({}, {}. _lnpost, {})".format(nwalkers, self.nvarys, sampler_kwargs)
             self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
                                                  _lnpost, **sampler_kwargs)
 
