@@ -1006,6 +1006,7 @@ class Minimizer(object):
         if not HAS_EMCEE:
             raise NotImplementedError('You must have emcee to use'
                                       ' the emcee method')
+
         tparams = params
         # if you're reusing the sampler then ntemps, nwalkers have to be
         # determined from the previous sampling
@@ -1067,12 +1068,12 @@ class Minimizer(object):
 
         # set up multiprocessing options for the samplers
         auto_pool = None
-        # sampler_kwargs = {}
-        # if isinstance(workers, int) and workers > 1:
-        #     auto_pool = multiprocessing.Pool(workers)
-        #     sampler_kwargs['pool'] = auto_pool
-        # elif hasattr(workers, 'map'):
-        #     sampler_kwargs['pool'] = workers
+        sampler_kwargs = {}
+        if isinstance(workers, int) and workers > 1:
+            auto_pool = multiprocessing.Pool(workers)
+            sampler_kwargs['pool'] = auto_pool
+        elif hasattr(workers, 'map'):
+            sampler_kwargs['pool'] = workers
 
         # function arguments for the log-probability functions
         # these values are sent to the log-probability functions by the sampler.
@@ -1112,9 +1113,9 @@ class Minimizer(object):
             self.sampler = emcee.PTSampler(ntemps, nwalkers, self.nvarys,
                                            _lnpost, _lnprior, **sampler_kwargs)
         else:
-            print "{}".format(sampler_kwargs)
-            p0 = 1 + rng.randn(nwalkers, self.nvarys) * gaussian_scale
-            p0 *= var_arr
+            #p0 = 1 + rng.randn(nwalkers, self.nvarys) * gaussian_scale
+            #p0 *= var_arr
+            print "Calling emcee as emcee.EnsembleSampler({}, {}. _lnpost, {})".format(nwalkers, self.nvarys, **sampler_kwargs)
             self.sampler = emcee.EnsembleSampler(nwalkers, self.nvarys,
                                                  _lnpost, **sampler_kwargs)
 
